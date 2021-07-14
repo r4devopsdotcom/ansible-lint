@@ -31,6 +31,7 @@ import sys
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Optional
 
+from ansible_compat.config import ansible_version
 from enrich.console import should_do_markup
 
 from ansiblelint import cli
@@ -39,7 +40,7 @@ from ansiblelint.color import console, console_options, reconfigure, render_yaml
 from ansiblelint.config import options
 from ansiblelint.constants import EXIT_CONTROL_C_RC
 from ansiblelint.file_utils import abspath, cwd, normpath
-from ansiblelint.prerun import check_ansible_presence, prepare_environment
+from ansiblelint.prerun import _perform_mockings
 from ansiblelint.skip_utils import normalize_tag
 from ansiblelint.version import __version__
 
@@ -85,10 +86,9 @@ def initialize_options(arguments: Optional[List[str]] = None) -> None:
     new_options.cwd = pathlib.Path.cwd()
 
     if new_options.version:
-        ansible_version, _ = check_ansible_presence(exit_on_error=True)
         print(
             "ansible-lint {ver!s} using ansible {ansible_ver!s}".format(
-                ver=__version__, ansible_ver=ansible_version
+                ver=__version__, ansible_ver=ansible_version()
             )
         )
         sys.exit(0)
@@ -176,9 +176,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     _logger.debug(os.getcwd())
 
     app = App(options=options)
+    # Make linter use the cache dir from compat
+    options.cache_dir = app.runtime.cache_dir
 
-    prepare_environment()
-    check_ansible_presence(exit_on_error=True)
+    app.runtime.prepare_environment()
+    _perform_mockings()
+    # check_ansible_presence(exit_on_error=True)
 
     # On purpose lazy-imports to avoid pre-loading Ansible
     # pylint: disable=import-outside-toplevel

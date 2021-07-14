@@ -7,7 +7,7 @@ import sys
 import tempfile
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from ansiblelint.prerun import prepare_environment
+from ansible_compat.runtime import Runtime
 
 if TYPE_CHECKING:
     # https://github.com/PyCQA/pylint/issues/3240
@@ -18,7 +18,8 @@ else:
 
 # Emulate command line execution initialization as without it Ansible module
 # would be loaded with incomplete module/role/collection list.
-prepare_environment()
+runtime = Runtime(isolated=True)
+runtime.prepare_environment()
 
 # pylint: disable=wrong-import-position
 from ansiblelint.errors import MatchError  # noqa: E402

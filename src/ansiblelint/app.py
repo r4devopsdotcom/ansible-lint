@@ -3,6 +3,8 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any, List, Tuple, Type
 
+from ansible_compat.runtime import Runtime
+
 from ansiblelint import formatters
 from ansiblelint.color import console, console_stderr, render_yaml
 from ansiblelint.errors import MatchError
@@ -31,6 +33,8 @@ class App:
 
         formatter_factory = choose_formatter_factory(options)
         self.formatter = formatter_factory(options.cwd, options.display_relative_path)
+
+        self.runtime = Runtime(isolated=True)
 
     def render_matches(self, matches: List[MatchError]) -> None:
         """Display given matches."""
